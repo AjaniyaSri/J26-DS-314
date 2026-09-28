@@ -1,0 +1,32 @@
+# Large research data
+data/raw/
+data/processed/
+data/patches/
+
+# Geospatial files
+*.tif
+*.tiff
+*.vrt
+*.nc
+*.h5
+
+# ML artifacts
+*.pt
+*.pth
+*.ckpt
+*.keras
+*.onnx
+
+# Experiment outputs
+runs/
+outputs/
+checkpoints/
+embeddings/
+
+# Local environments
+.venv/
+env/
+
+# Temporary
+tmp/
+cache/
