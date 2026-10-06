@@ -1,0 +1,2 @@
+aoi_id,event_ids,min_lon,min_lat,max_lon,max_lat,coordinate_reference,status,approx_width_km,approx_height_km,basin_focus,intersecting_ds_status,affected_ds_status,gauge_review_status,s1_coverage_status,justification,approved_by,approval_date
+PP1_AOI_KELANI_01,EV2_Nov_2025;EV9_May_2021,79.82,6.80,80.28,7.25,CRS84 longitude/latitude,PROVISIONAL,about 51,about 50,Kelani,PENDING,PENDING,PENDING,PENDING,Verify relevant DMC impacts and suitable S1 coverage for both events,,

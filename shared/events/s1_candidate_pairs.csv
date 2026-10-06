@@ -1,0 +1,1 @@
+event_id,aoi_id,pre_scene_id,pre_acquisition_local,post_scene_id,post_acquisition_local,same_instrument_mode,same_polarization,same_orbit_pass,same_relative_orbit,pre_to_post_days,post_to_target_days,coverage_check,pair_status,reason

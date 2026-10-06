@@ -1,0 +1,1 @@
+event_id,aoi_id,scene_id,acquisition_utc,acquisition_local,date_local,platform,instrument_mode,resolution_m,orbit_pass,relative_orbit,polarizations,slice_number,aoi_overlap_pct,candidate_role,coverage_status,review_notes

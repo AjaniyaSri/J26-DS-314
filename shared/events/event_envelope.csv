@@ -1,0 +1,3 @@
+event_id,pp1_box_id,event_start_date,peak_date,event_end_date,prediction_target_date,prediction_cutoff,first_warning_date,withdrawal_date,affected_provinces,affected_districts,affected_ds_count,evidence_completeness,confidence,notes,hydrological_peak_date,hydrological_peak_station,hydrological_peak_observed_level,impact_peak_date,warning_peak_date,sar_label_acquisition_date,selected_peak_basis,target_date_rationale
+EV2_Nov_2025,PP1_AOI_KELANI_01,,,,,,,,,,,PENDING,PENDING,Proposal reference date 2025-11-28 only; all envelope dates must be evidence-derived,,,,,,,,
+EV9_May_2021,PP1_AOI_KELANI_01,,,,,,,,,,,PENDING,PENDING,Proposal reference date 2021-05-14 only; all envelope dates must be evidence-derived,,,,,,,,

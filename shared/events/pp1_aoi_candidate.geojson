@@ -1,0 +1,46 @@
+{
+  "type": "FeatureCollection",
+  "name": "pp1_aoi_candidate",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "aoi_id": "PP1_AOI_KELANI_01",
+        "status": "PROVISIONAL",
+        "purpose": "PP1 feasibility check for EV2_Nov_2025 and EV9_May_2021",
+        "west_lon": 79.82,
+        "south_lat": 6.8,
+        "east_lon": 80.28,
+        "north_lat": 7.25,
+        "warning": "Candidate study window only; not a mapped flood extent and not yet approved. Verify DMC affected locations, gauge relevance, SAR coverage and grid suitability."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              79.82,
+              6.8
+            ],
+            [
+              80.28,
+              6.8
+            ],
+            [
+              80.28,
+              7.25
+            ],
+            [
+              79.82,
+              7.25
+            ],
+            [
+              79.82,
+              6.8
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
