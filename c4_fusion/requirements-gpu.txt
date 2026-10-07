@@ -1,0 +1,8 @@
+# Optional dependencies for the local NVIDIA GPU environment.
+# Install with: python -m pip install -r c4_fusion/requirements-gpu.txt
+--extra-index-url https://download.pytorch.org/whl/cu128
+
+torch==2.10.0+cu128
+geopandas
+rasterio
+ipykernel
