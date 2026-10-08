@@ -1,0 +1,13 @@
+.venv/
+.python/
+.tools/
+.cache/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+models/
+results/
+logs/
+runs/
+# Dataset is local research input, never upload by default.
+*.csv
