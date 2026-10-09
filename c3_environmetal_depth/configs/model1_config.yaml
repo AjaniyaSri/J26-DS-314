@@ -1,0 +1,39 @@
+dataset: C3_Static_Model_Lag2_Ready_PRELIMINARY.csv
+target: target_stage_next_day_m
+seed: 42
+features:
+  - stage_at_issue_m
+  - stage_lag_1d_m
+  - stage_lag_2d_m
+  - stage_change_1d_m
+  - mean_elevation_m
+  - mean_slope_deg
+  - tree_fraction
+  - cropland_fraction
+  - builtup_fraction
+  - catchment_area_km2
+selection_metric: mae_m
+early_stopping_rounds: 40
+model:
+  objective: regression
+  metric: rmse
+  learning_rate: 0.05
+  n_estimators: 500
+  num_leaves: 15
+  max_depth: 5
+  min_child_samples: 20
+  colsample_bytree: 0.9
+  reg_lambda: 1.0
+  random_state: 42
+  verbosity: -1
+  deterministic: true
+  force_col_wise: true
+  n_jobs: 1
+# Six predefined candidates, not a Cartesian grid. Candidate order breaks ties.
+candidates:
+  - {}
+  - {num_leaves: 7, max_depth: 3, min_child_samples: 40, learning_rate: 0.03}
+  - {num_leaves: 7, max_depth: 3, min_child_samples: 20, learning_rate: 0.05}
+  - {num_leaves: 15, max_depth: 5, min_child_samples: 10, learning_rate: 0.03}
+  - {num_leaves: 15, max_depth: 5, min_child_samples: 40, learning_rate: 0.1}
+  - {num_leaves: 31, max_depth: 7, min_child_samples: 20, learning_rate: 0.05}
