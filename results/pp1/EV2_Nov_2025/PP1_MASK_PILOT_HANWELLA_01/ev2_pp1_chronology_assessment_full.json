@@ -1,0 +1,52 @@
+{
+  "pre_acquisition_local": "2025-11-26 05:55:15",
+  "post_acquisition_local": "2025-12-02 05:54:29",
+  "highest_supplied_hanwella_observation": {
+    "time_local": "2025-11-30 00:00",
+    "water_level_m": 10.95,
+    "note": "Highest sampled value, not proven continuous maximum"
+  },
+  "first_observed_threshold_exceedances": {
+    "alert_7m": {
+      "last_observed_below_threshold": "2025-11-27 18:00",
+      "first_observed_at_or_above_threshold": "2025-11-28 02:00",
+      "first_observed_level_m": 7.3,
+      "exact_crossing_time_known": false
+    },
+    "minor_8m": {
+      "last_observed_below_threshold": "2025-11-28 05:00",
+      "first_observed_at_or_above_threshold": "2025-11-28 06:00",
+      "first_observed_level_m": 8.02,
+      "exact_crossing_time_known": false
+    },
+    "major_10m": {
+      "last_observed_below_threshold": "2025-11-28 21:00",
+      "first_observed_at_or_above_threshold": "2025-11-28 23:00",
+      "first_observed_level_m": 10.07,
+      "exact_crossing_time_known": false
+    }
+  },
+  "post_acquisition_phase": "ABOVE_ALERT_BELOW_MINOR_FALLING_AFTER_REPORTED_PEAK",
+  "warning_issuance_local": [
+    [
+      "2025-11-27 03:00",
+      "Amber warning"
+    ],
+    [
+      "2025-11-28 06:00",
+      "Red warning"
+    ],
+    [
+      "2025-11-28 13:00",
+      "Red escalation"
+    ]
+  ],
+  "source_limitations": [
+    "Researcher transcription; original PDFs pending verification",
+    "27 Nov Amber bulletin contains inconsistent year 2024",
+    "Possible republication is not automatically a new warning",
+    "Observed water level is not pixel-level inundation truth",
+    "26 Nov midnight-to-03:00 change requires source checking",
+    "No continuous-time or per-pixel flood onset is measured"
+  ]
+}

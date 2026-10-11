@@ -1,0 +1,36 @@
+{
+  "analysis": "Internal processing-stage comparison",
+  "is_ground_truth_accuracy": false,
+  "candidate_counts_weighted": {
+    "fixed_3dB": 59533.73333333332,
+    "raw_otsu": 104047.09019607847,
+    "cleaned_otsu": 72246.63529411764,
+    "final_after_jrc": 71676.63529411764
+  },
+  "threshold_comparison": {
+    "methods": [
+      "Fixed 3 dB",
+      "Raw Otsu"
+    ],
+    "intersection": 59533.73333333332,
+    "union": 104047.09019607847,
+    "iou_not_accuracy": 0.5721806657076235
+  },
+  "morphology_comparison": {
+    "methods": [
+      "Raw Otsu",
+      "Cleaned Otsu"
+    ],
+    "intersection": 69435.35294117645,
+    "union": 106858.37254901964,
+    "iou_not_accuracy": 0.6497886060292004
+  },
+  "jrc_exclusion": {
+    "before_jrc": 72246.63529411764,
+    "after_jrc": 71676.63529411764,
+    "removed": 570.0,
+    "removed_percent": 0.788964077952582
+  },
+  "count_policy": "Weighted grid-cell equivalents on the explicit 10 m analysis grid. Not exact unweighted cell counts.",
+  "interpretation": "Threshold IoU measures agreement between two thresholds. Morphology IoU measures the effect of cleanup. JRC removal quantifies historical-water exclusion. None measures classification accuracy."
+}
