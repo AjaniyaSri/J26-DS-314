@@ -1,0 +1,56 @@
+{
+  "event_id": "EV2_Nov_2025",
+  "aoi_id": "PP1_MASK_PILOT_HANWELLA_01",
+  "status": "DIAGNOSTIC_NOT_GROUND_TRUTH",
+  "pre_scene_ids": [
+    "S1A_IW_GRDH_1SDV_20251126T002515_20251126T002540_062041_07C2FF_C9CA",
+    "S1A_IW_GRDH_1SDV_20251126T002540_20251126T002605_062041_07C2FF_436D"
+  ],
+  "post_scene_id": "S1C_IW_GRDH_1SDV_20251202T002429_20251202T002454_005265_00A742_E36B",
+  "analysis_crs": "EPSG:32644",
+  "analysis_crs_transform": [
+    10,
+    0,
+    284504.1578473144,
+    0,
+    -10,
+    844875.4712802953
+  ],
+  "pilot_bbox_wgs84": [
+    80.055,
+    6.885,
+    80.105,
+    6.935
+  ],
+  "vv_logratio_percentiles": {
+    "VV_log_ratio_dB_p2": -5.622215409956864,
+    "VV_log_ratio_dB_p50": 0.37467052622419433,
+    "VV_log_ratio_dB_p98": 10.871047029229766
+  },
+  "otsu_threshold_db": 1.499874386158608,
+  "coverage_counts_grid": {
+    "aoi_grid_pixels": 305380,
+    "post_vh_valid": 305380,
+    "post_vv_valid": 305380,
+    "pre_vh_valid": 305380,
+    "pre_vv_valid": 305380,
+    "valid_all_four": 305380,
+    "valid_both": 305380
+  },
+  "selected_counts_grid": {
+    "fixed_3dB": 59533,
+    "raw_otsu": 104047,
+    "opened": 68997,
+    "cleaned": 72246
+  },
+  "jrc_persistent_cells_on_target_grid": 1746,
+  "jrc_excluded_candidate_cells": 570,
+  "provisional_candidate_cells": 71676,
+  "caveats": [
+    "S1A to S1C platform mismatch",
+    "Post 2 Dec may be recession",
+    "Flood chronology incomplete",
+    "Mask not independently validated",
+    "JRC historical 30m proxy and masked-area policy"
+  ]
+}
