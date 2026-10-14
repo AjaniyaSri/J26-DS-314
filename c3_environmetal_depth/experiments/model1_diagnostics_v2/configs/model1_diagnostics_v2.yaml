@@ -1,0 +1,48 @@
+dataset: C3_Static_Model_Lag2_Ready_PRELIMINARY.csv
+original_config: configs/model1_config.yaml
+original_model: models/model1_static/lightgbm_model1.joblib
+seed: 42
+minimum_station_training_rows: 5
+early_stopping_rounds: 40
+selection_metric: validation_stage_mae_m
+# Predeclared pragmatic simplicity band, not a statistical significance threshold.
+near_tie_mae_m: 0.005
+near_tie_rule: fewest_actual_tree_leaves_then_fewer_transformations_then_candidate_order
+recommendation_rule: prefer_persistence_unless_selected_environmental_mae_improves_by_more_than_near_tie_band
+test_policy: previously_inspected_holdout_final_descriptive_assessment_only
+base_parameters:
+  objective: regression
+  metric: rmse
+  learning_rate: 0.05
+  n_estimators: 500
+  num_leaves: 7
+  max_depth: 3
+  min_child_samples: 20
+  colsample_bytree: 0.9
+  reg_alpha: 0.0
+  reg_lambda: 1.0
+  random_state: 42
+  deterministic: true
+  force_col_wise: true
+  n_jobs: 1
+  verbosity: -1
+# Six revised candidates + one exact original reproduction + one matched ablation.
+candidates:
+  - id: delta_standard
+    representation: delta
+    parameters: {}
+  - id: delta_small
+    representation: delta
+    parameters: {n_estimators: 250, num_leaves: 3, max_depth: 2, min_child_samples: 40, learning_rate: 0.03, reg_alpha: 0.1, reg_lambda: 5.0}
+  - id: relative_standard
+    representation: relative
+    parameters: {}
+  - id: relative_small
+    representation: relative
+    parameters: {n_estimators: 250, num_leaves: 3, max_depth: 2, min_child_samples: 40, learning_rate: 0.03, reg_alpha: 0.1, reg_lambda: 5.0}
+  - id: absolute_small
+    representation: absolute
+    parameters: {n_estimators: 250, num_leaves: 3, max_depth: 2, min_child_samples: 40, learning_rate: 0.03, reg_alpha: 0.1, reg_lambda: 5.0}
+  - id: absolute_mae
+    representation: absolute
+    parameters: {objective: regression_l1, metric: mae, n_estimators: 250, num_leaves: 7, max_depth: 3, min_child_samples: 40, learning_rate: 0.03, reg_alpha: 0.1, reg_lambda: 5.0}
