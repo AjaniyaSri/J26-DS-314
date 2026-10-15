@@ -1,0 +1,67 @@
+dataset: C3_Model2_Weather_PreviousDay_1314_PRELIMINARY (1).csv
+model1_dataset: C3_Static_Model_Lag2_Ready_PRELIMINARY.csv
+output_root: experiments/model2_dynamic_v1
+target: target_stage_next_day_m
+seed: 42
+features:
+  - stage_at_issue_m
+  - stage_lag_1d_m
+  - stage_lag_2d_m
+  - stage_change_1d_m
+  - mean_elevation_m
+  - mean_slope_deg
+  - tree_fraction
+  - cropland_fraction
+  - builtup_fraction
+  - catchment_area_km2
+  - c2_rainfall_mm
+  - c2_rainfall_3day_mm
+  - c2_rainfall_7day_mm
+  - c2_rainfall_14day_mm
+  - c2_soil_moisture_0_7cm
+  - c2_soil_moisture_7_28cm
+weather_definition:
+  source_date_column: c2_weather_source_date
+  alignment_column: c2_weather_alignment
+  alignment_value: previous_calendar_day
+  source_age_days: 1
+  rolling_window_definition: '[source_date - N days, source_date), from supplied C2 script'
+  rolling_extra_lag_days: 1
+  rainfall_units: mm accumulated totals, per supplied C2 description
+  rainfall_1day_window_status: unverified; not assumed nested in rolling totals
+  soil_moisture_units: presumed m3/m3; not independently verified from CSV
+  soil_moisture_observation_window_status: unverified
+  soil_moisture_screening_range: [0.0, 1.0]
+  publication_availability: unverified; retrospective experiment only
+  timezone_of_weather_aggregation: unverified
+excluded_weather_column: c2_temperature_C
+selection_metric: reconstructed_stage_validation_mae_m
+early_stopping_rounds: 40
+family_order: [absolute, delta]
+selection_ties: fewer_retained_leaves_then_absolute_then_candidate_order
+recommendation_rule: select_model2_only_if_validation_mae_is_strictly_below_persistence
+test_policy: previously_inspected_project_holdout_final_descriptive_assessment_only
+base_parameters:
+  objective: regression
+  metric: rmse
+  learning_rate: 0.05
+  n_estimators: 500
+  num_leaves: 7
+  max_depth: 3
+  min_child_samples: 20
+  colsample_bytree: 0.9
+  reg_alpha: 0.0
+  reg_lambda: 1.0
+  random_state: 42
+  deterministic: true
+  force_col_wise: true
+  n_jobs: 1
+  verbosity: -1
+# Three configurations per family: six fits, plus two matched no-weather controls.
+candidates:
+  - id: standard
+    parameters: {}
+  - id: small
+    parameters: {n_estimators: 250, learning_rate: 0.03, num_leaves: 3, max_depth: 2, min_child_samples: 40, reg_alpha: 0.1, reg_lambda: 5.0}
+  - id: mae_loss
+    parameters: {objective: regression_l1, metric: mae, n_estimators: 250, learning_rate: 0.03, num_leaves: 7, max_depth: 3, min_child_samples: 40, reg_alpha: 0.1, reg_lambda: 5.0}
