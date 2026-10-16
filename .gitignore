@@ -31,3 +31,14 @@ rp_env/
 # Temporary
 tmp/
 cache/
+
+secrets.env
+
+# Generated catchment processing data
+/results/catchments/
+
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+*_secrets.env
