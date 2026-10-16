@@ -1,0 +1,22 @@
+{
+  "pre_acquisition_local": "2025-11-26 05:55:15",
+  "post_acquisition_local": "2025-12-02 05:54:29",
+  "post_bracketing_hanwella_m": {
+    "05:00": 7.8,
+    "06:00": 7.73
+  },
+  "post_phase": "ABOVE_ALERT_AND_FALLING_RECESSION_PLAUSIBLE",
+  "missing_dates": [
+    "2025-11-27",
+    "2025-11-28",
+    "2025-11-29",
+    "2025-11-30",
+    "2025-12-01"
+  ],
+  "cautions": [
+    "This chronology is based on researcher-transcribed reports",
+    "The 26 Nov midnight-to-03:00 Hanwella change should be checked in the original PDF",
+    "Gauge stage does not confirm individual 10 m flooded pixels",
+    "The event peak cannot be recovered from observations on only two dates"
+  ]
+}
