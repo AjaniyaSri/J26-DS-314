@@ -1,0 +1,2 @@
+station,basin,grid_row,grid_col,snapped_lon,snapped_lat,distance_m,merit_upa_km2,official_area_km2,area_difference_pct,direction,rank_score,original_lon,original_lat,tributary,selection_method,used_radius_m,reference_notes
+Moragaswewa,Deduru Oya,2796,812,79.99666666666666,7.700000000000001,9.3,2017.89306640625,1708.0,18.143622154932668,64,0.3541321188221087,79.99659,7.70003500000002,Deduru Oya,AUTO_RANKED_CANDIDATE_NOT_VERIFIED;GEOMETRY_VS_PROPERTY_COORDINATES_DIFFER,350,GEOMETRY_VS_PROPERTY_COORDINATES_DIFFER

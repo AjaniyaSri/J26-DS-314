@@ -1,0 +1,2 @@
+station,basin,grid_row,grid_col,snapped_lon,snapped_lat,distance_m,merit_upa_km2,official_area_km2,area_difference_pct,direction,rank_score,original_lon,original_lat,tributary,selection_method,used_radius_m,reference_notes
+Galgamuwa,Mee Oya,2472,1131,80.26249999999999,7.970000000000001,72.6,313.1231689453125,299.0,4.723467874686455,32,0.253637748437076,80.2623219997686,7.96936799958593,Mee Oya,AUTO_RANKED_CANDIDATE_NOT_VERIFIED,350,

@@ -34,10 +34,23 @@ cache/
 
 secrets.env
 
-# Generated catchment processing data
+# Intermediate watershed processing files
 /results/catchments/
 
-# Credentials and local configuration
+# Shared binary raster masks stay outside Git
+/shared/spatial/catchments/**/*.tif
+/shared/spatial/catchments/**/*.tiff
+
+# Private third-party hydrography reference data
+/private_data/
+rivers_part*.json
+rivers.json
+
+# Local maps that embed third-party river coordinates
+/results/catchments/
+*_PRIVATE_RIVER_QA.html
+
+# Local secrets
 .env
 .env.*
 !.env.example

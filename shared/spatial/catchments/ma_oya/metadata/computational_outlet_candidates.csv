@@ -1,0 +1,2 @@
+station,basin,grid_row,grid_col,snapped_lon,snapped_lat,distance_m,merit_upa_km2,official_area_km2,area_difference_pct,direction,rank_score,original_lon,original_lat,tributary,selection_method,used_radius_m,reference_notes
+Yaka Wewa,Ma Oya,1568,1628,80.67666666666666,8.723333333333334,352.08,120.51030731201172,121.0,0.40470470081676135,1,0.7905065052878631,80.6749679997877,8.72603100017587,Mukunu Oya,AUTO_RANKED_CANDIDATE_NOT_VERIFIED;FALLBACK_RADIUS_USED,900,

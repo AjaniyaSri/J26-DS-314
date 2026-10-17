@@ -1,0 +1,2 @@
+station,basin,grid_row,grid_col,snapped_lon,snapped_lat,distance_m,merit_upa_km2,official_area_km2,area_difference_pct,direction,rank_score,original_lon,original_lat,tributary,selection_method,used_radius_m,reference_notes
+Moraketiya,Walawe Ganga,4422,1898,80.90166666666666,6.345000000000001,59.94,1581.5399169921875,1542.0,2.564196951503729,1,0.18382967548769102,80.901243999799,6.34533899959541,Walawe Ganga,AUTO_RANKED_CANDIDATE_NOT_VERIFIED,350,

@@ -1,0 +1,3 @@
+station,basin,grid_row,grid_col,snapped_lon,snapped_lat,distance_m,merit_upa_km2,official_area_km2,area_difference_pct,direction,rank_score,original_lon,original_lat,tributary,selection_method,used_radius_m,reference_notes
+Baddegama,Gin Ganga,4627,1026,80.175,6.174166666666667,58.04,721.5152587890625,749.0,3.6695248612733646,8,0.2037554297250865,80.1753810002093,6.17380599991107,Gin Ganga,AUTO_RANKED_CANDIDATE_NOT_VERIFIED,350,
+Thawalama,Gin Ganga,4426,1212,80.33,6.341666666666667,69.22,358.4941101074219,377.0,4.908724109437168,16,0.2544884007341839,80.3306159997305,6.34177600033244,Gin Ganga,AUTO_RANKED_CANDIDATE_NOT_VERIFIED,350,

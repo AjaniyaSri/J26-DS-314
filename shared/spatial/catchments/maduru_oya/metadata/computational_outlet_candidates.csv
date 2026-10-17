@@ -1,0 +1,2 @@
+station,basin,grid_row,grid_col,snapped_lon,snapped_lat,distance_m,merit_upa_km2,official_area_km2,area_difference_pct,direction,rank_score,original_lon,original_lat,tributary,selection_method,used_radius_m,reference_notes
+Padiyathalawa,Maduru Oya,3177,2250,81.195,7.3825,48.63,167.82142639160156,159.0,5.5480669129569575,128,0.21604875348555486,81.1946370001375,7.38225100016999,Maduru Oya,AUTO_RANKED_CANDIDATE_NOT_VERIFIED,350,
