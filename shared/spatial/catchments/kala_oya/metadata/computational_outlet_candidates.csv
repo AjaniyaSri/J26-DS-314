@@ -1,0 +1,2 @@
+station,basin,grid_row,grid_col,snapped_lon,snapped_lat,distance_m,merit_upa_km2,official_area_km2,area_difference_pct,direction,rank_score,original_lon,original_lat,tributary,selection_method,used_radius_m,reference_notes
+Thambuththegama,Kala Oya,2290,1207,80.32583333333332,8.121666666666668,53.43,1189.644775390625,1186.0,0.3073166433916526,8,0.12487684402065698,80.3255579995907,8.12126900009338,Kala Oya,AUTO_RANKED_CANDIDATE_NOT_VERIFIED,350,

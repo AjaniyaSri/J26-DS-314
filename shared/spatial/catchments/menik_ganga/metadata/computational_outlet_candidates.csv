@@ -1,0 +1,2 @@
+station,basin,grid_row,grid_col,snapped_lon,snapped_lat,distance_m,merit_upa_km2,official_area_km2,area_difference_pct,direction,rank_score,original_lon,original_lat,tributary,selection_method,used_radius_m,reference_notes
+Katharagama,Menik Ganga,4335,2415,81.3325,6.4175,41.11,796.3240966796875,787.0,1.1847645082195044,2,0.11491208406667042,81.3321899999841,6.417705000347,Menik Ganga,AUTO_RANKED_CANDIDATE_NOT_VERIFIED,350,

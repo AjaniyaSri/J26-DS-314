@@ -1,0 +1,2 @@
+station,basin,grid_row,grid_col,snapped_lon,snapped_lat,distance_m,merit_upa_km2,official_area_km2,area_difference_pct,direction,rank_score,original_lon,original_lat,tributary,selection_method,used_radius_m,reference_notes
+Siyambalanduwa,Heda Oya,3749,2670,81.54499999999999,6.905833333333334,46.12,289.39434814453125,295.0,1.9002209679555084,1,0.1408565995383489,81.545409999742,6.90591099956999,Heda Oya,AUTO_RANKED_CANDIDATE_NOT_VERIFIED,350,

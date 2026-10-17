@@ -1,0 +1,2 @@
+station,basin,grid_row,grid_col,snapped_lon,snapped_lat,distance_m,merit_upa_km2,official_area_km2,area_difference_pct,direction,rank_score,original_lon,original_lat,tributary,selection_method,used_radius_m,reference_notes
+Nakkala,Kumbukkan Oya,3762,2372,81.29666666666667,6.8950000000000005,59.5,219.88816833496094,216.0,1.8000779328522858,4,0.16791353993195263,81.2970650001108,6.8953620001963,Kumbukkan Oya,AUTO_RANKED_CANDIDATE_NOT_VERIFIED,350,
