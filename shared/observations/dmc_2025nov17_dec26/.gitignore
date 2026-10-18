@@ -1,0 +1,8 @@
+# DMC numerical observations and derived datasets
+*.csv
+*.xlsx
+*.xls
+*.zip
+
+# Keep documentation under version control
+!*.md
