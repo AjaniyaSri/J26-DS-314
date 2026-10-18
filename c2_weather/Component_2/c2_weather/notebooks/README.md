@@ -1,0 +1,1 @@
+The scripts in `../scripts/` are the canonical reproducible workflow. This directory is reserved for optional analysis notebooks; no notebook is required to validate, train, evaluate, or reproduce the PP1 evidence.
