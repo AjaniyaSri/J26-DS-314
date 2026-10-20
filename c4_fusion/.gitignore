@@ -1,0 +1,6 @@
+# C4 private source material: gauge coordinates, source-derived observations, credentials
+/private_data/
+
+# Local notebook state and temporary output
+/notebooks/.ipynb_checkpoints/
+**/__pycache__/
