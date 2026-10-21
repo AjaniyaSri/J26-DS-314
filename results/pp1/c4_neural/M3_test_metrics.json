@@ -1,0 +1,12 @@
+{
+  "model": "M3",
+  "validation_mae_m": 0.22933776754207327,
+  "test_mae_m": 0.21373981713951484,
+  "test_rmse_m": 0.40094665188586787,
+  "persistence_mae_m": 0.2172298602696158,
+  "persistence_rmse_m": 0.40661358117189905,
+  "epochs_completed": 5,
+  "test_n": 351,
+  "train_n": 809,
+  "validation_n": 269
+}

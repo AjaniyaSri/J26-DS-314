@@ -1,0 +1,12 @@
+{
+  "model": "M7",
+  "validation_mae_m": 0.22706418514916446,
+  "test_mae_m": 0.21519280923397793,
+  "test_rmse_m": 0.40400421032790323,
+  "persistence_mae_m": 0.2172298602696158,
+  "persistence_rmse_m": 0.40661358117189905,
+  "epochs_completed": 5,
+  "test_n": 351,
+  "train_n": 809,
+  "validation_n": 269
+}

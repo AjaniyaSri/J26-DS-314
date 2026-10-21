@@ -1,0 +1,19 @@
+{
+  "seed": 42,
+  "ablation_order": [
+    "M1",
+    "M2",
+    "M3",
+    "M4",
+    "M5",
+    "M6",
+    "M7"
+  ],
+  "epochs": 18,
+  "patience": 4,
+  "batch_size": 8,
+  "learning_rate": 0.0003,
+  "freeze_efficientnet_backbone": true,
+  "pretrained_efficientnet_weights": true,
+  "note": "Use a locally cached torchvision EfficientNet-B0 pretrained checkpoint. If unavailable do NOT freeze a randomly initialized backbone for research. Set pretrained=false AND freeze=false only for a clearly labelled from-scratch sensitivity run."
+}

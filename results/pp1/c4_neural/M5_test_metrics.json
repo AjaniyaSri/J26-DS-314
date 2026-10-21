@@ -1,0 +1,12 @@
+{
+  "model": "M5",
+  "validation_mae_m": 0.22587978313625082,
+  "test_mae_m": 0.21612852455204368,
+  "test_rmse_m": 0.4060084811519591,
+  "persistence_mae_m": 0.2172298602696158,
+  "persistence_rmse_m": 0.40661358117189905,
+  "epochs_completed": 6,
+  "test_n": 351,
+  "train_n": 809,
+  "validation_n": 269
+}

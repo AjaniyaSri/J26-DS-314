@@ -1,0 +1,12 @@
+{
+  "model": "M2",
+  "validation_mae_m": 0.23516880097663978,
+  "test_mae_m": 0.22011435100877727,
+  "test_rmse_m": 0.3992710650245644,
+  "persistence_mae_m": 0.2172298602696158,
+  "persistence_rmse_m": 0.40661358117189905,
+  "epochs_completed": 5,
+  "test_n": 351,
+  "train_n": 809,
+  "validation_n": 269
+}
