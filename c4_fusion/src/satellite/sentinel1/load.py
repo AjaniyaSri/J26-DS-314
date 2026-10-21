@@ -182,9 +182,15 @@ class Sentinel1PatchLoader:
                  ext.get("n_mosaic_patches_accepted") == EXPECTED_MOSAIC_PATCHES and
                  ext.get("original_1408_rows_unchanged") is True,
                  "Glencourse extension manifest does not describe complete 21-row recovery.")
-        _require(ext.get("original_1429_row_mapping_unchanged_path") ==
-                 "data/processed/c4/satellite/sentinel1/" + BASE_INDEX_FILENAME,
-                 "Glencourse manifest references a different original mapping.")
+        # The manifest may record the original mapping as a relative or absolute
+        # path, with either Windows or POSIX separators. Validate the basename;
+        # SHA256 checks below and _validate_overlay() establish file identity.
+        recorded_path = ext.get("original_1429_row_mapping_unchanged_path")
+        _require(
+            isinstance(recorded_path, str)
+            and Path(recorded_path.replace("\\", "/")).name == BASE_INDEX_FILENAME,
+            "Glencourse manifest references a different original mapping.",
+        )
         mosaics = ext.get("mosaics", [])
         _require(isinstance(mosaics, list) and len(mosaics) == EXPECTED_MOSAIC_PATCHES,
                  "Expected exactly three provenance-described Glencourse mosaics.")
