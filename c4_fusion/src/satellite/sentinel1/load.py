@@ -1,34 +1,32 @@
-"""Read-only Sentinel-1 VV/VH loader for FloodRisk Sri Lanka C4.
+"""Read-only Sentinel-1 C4 loader, with the audited Glencourse mosaic extension.
 
-Notebook 02 does the Earth Engine retrieval and pixel QA; this module ONLY reads
-its exported target-free station-day index and cached, validated image patches.
+Notebook 02 owns all Earth Engine retrieval and patch creation. This module
+NEVER writes files or contacts Earth Engine. It selects the separately saved
+Glencourse extension, never overwrites or silently falls back to the old index.
 
-Example (run with repository root on sys.path)::
+Repository layout (default):
+  data/processed/c4/satellite/sentinel1/
+      c4_s1_manifest_PRIVATE.json                    (original, unchanged)
+      c4_s1_sample_index_1429_PRIVATE.csv            (original, unchanged)
+      c4_s1_scene_inventory_39_PRIVATE.csv           (original, unchanged)
+      c4_s1_patch_QA_PRIVATE.csv                      (original, unchanged)
+      glencourse_mosaic_extension/
+          c4_s1_sample_index_1429_GLENC_MOSAIC_PRIVATE.csv
+          c4_s1_glencourse_mosaic_QA_PRIVATE.csv
+          c4_s1_glencourse_mosaic_manifest_PRIVATE.json
+      cache/patches/                                 (261 original + 3 mosaics)
 
-    from c4_fusion.src.satellite.sentinel1.load import Sentinel1PatchLoader
+Usage:
+    sar = Sentinel1PatchLoader()   # metadata-only, no NPZ reads
+    print(sar.sample_count, sar.table().sar_available.sum())
+    sar.verify_all_patches()       # optional full offline NPZ integrity test
+    row = sar.get_sample('glencourse_2025-11-17')
+    batches = sar.iter_batches(sar.table(), batch_size=16)
 
-    sar = Sentinel1PatchLoader()
-    one = sar.get_sample("holombuwa_2025-11-27")
-    # one['sar_image']: [256, 256, 2], float32, in source dB
-    # one['sar_valid_mask']: [256, 256], bool
-    # one['sar_available']: 0 or 1
-    # one['sar_age_hours']: NaN if SAR is unavailable
-
-    # For an aligned subset, not all 1,429 large images in memory at once:
-    X = sar.get_batch(sample_index.iloc[:8])
-    for batch in sar.iter_batches(sample_index, batch_size=16):
-        ...
-
-IMPORTANT MODEL RULES:
-- If no SAR image exists, a zero tensor is returned ONLY as a batch placeholder.
-  It is not a real radar observation. Gate the CNN output with sar_available.
-- sar_age_logscaled==0 on missing samples is NOT a zero-hour-old image; the
-  availability flag must accompany it. Raw sar_age_hours remains NaN.
-- Valid source pixels are raw dB and have NOT been normalized. Train-only
-  statistics and masking must be applied in the future model/data pipeline.
-- Invalid pixels inside otherwise accepted patches are neutral-filled with
-  zero for array transport; sar_valid_mask marks them as absent.
-- ASCAT SWI is separate. Missing SAR does not imply missing SWI.
+Images are raw dB [256,256,2], NOT standardized. Invalid pixels are zero-filled
+ONLY for transport and marked False by sar_valid_mask. Dates use 09:00 Colombo
+(03:30 UTC) forecast origins. Reused acquisitions are not independent images.
+Retrospective hindcast: acquisition availability/publication latency unverified.
 """
 
 from __future__ import annotations
@@ -47,14 +45,25 @@ class Sentinel1DataError(ValueError):
     """Notebook 02 output violates the frozen Sentinel-1 data contract."""
 
 
-INDEX_FILENAME = "c4_s1_sample_index_1429_PRIVATE.csv"
-MANIFEST_FILENAME = "c4_s1_manifest_PRIVATE.json"
+INDEX_FILENAME = "c4_s1_sample_index_1429_GLENC_MOSAIC_PRIVATE.csv"
+MANIFEST_FILENAME = "c4_s1_glencourse_mosaic_manifest_PRIVATE.json"
+QA_FILENAME = "c4_s1_glencourse_mosaic_QA_PRIVATE.csv"
+BASE_INDEX_FILENAME = "c4_s1_sample_index_1429_PRIVATE.csv"
+BASE_MANIFEST_FILENAME = "c4_s1_manifest_PRIVATE.json"
+BASE_OTHER_FILES = ("c4_s1_scene_inventory_39_PRIVATE.csv", "c4_s1_patch_QA_PRIVATE.csv")
+EXTENSION_DIRNAME = "glencourse_mosaic_extension"
+GLEN_VERSION = "C4_S1_GLENC_SAME_PASS_SLICE_MOSAIC_V1"
 EXPECTED_SOURCE_VERSION = "C4_S1_V1_DUALPOL_IW_UTM44_50M_NATIVE_DB_SAMPLE"
 IMAGE_SHAPE = (256, 256, 2)
 MASK_SHAPE = (256, 256)
 EXPECTED_SAMPLES = 1429
 EXPECTED_STATIONS = 39
 EXPECTED_SPLITS = {"TRAIN": 809, "VALIDATION": 269, "TEST": 351}
+EXPECTED_BASE_AVAILABLE = 1408
+EXPECTED_AVAILABLE = 1429
+EXPECTED_BASE_PATCHES = 261
+EXPECTED_MOSAIC_PATCHES = 3
+EXPECTED_PATCHES = EXPECTED_BASE_PATCHES + EXPECTED_MOSAIC_PATCHES
 REQUIRED_COLUMNS = (
     "record_id", "station_id", "forecast_date", "split", "sar_available",
     "sar_status", "sar_scene_id", "sar_acquisition_utc", "sar_age_hours",
@@ -82,18 +91,16 @@ def _require(condition: bool, explanation: str) -> None:
 
 
 class Sentinel1PatchLoader:
-    """Validate sample metadata once and lazily read each unique cached patch.
+    """Validate the ORIGINAL export + Glencourse extension; load images lazily.
 
     Args:
-        repo_root: J26-DS-314 repository root. Usually found automatically.
-        data_dir: Override directory containing Notebook 02's index & manifest.
-        verify_provenance: Check exported index SHA256, source configuration,
-            and Notebook 01's target-free index SHA256 if the file exists.
-        verify_patch_hashes: Verify cached patch SHA256 on first read (default).
+        repo_root: J26-DS-314 repository root (normally auto-detected).
+        data_dir: Original Notebook 02 output folder (not the extension folder).
+        verify_provenance: Require SHA256 checks for all original/extension artifacts.
+        verify_patch_hashes: Check NPZ SHA256 on first use (default True).
 
-    Loading a 1,429-row index does NOT load images or contact Earth Engine.
-    Images are decoded only when get_sample/get_batch is called. A small
-    per-loader LRU cache avoids repeated decoding of shared station-scene files.
+    No automatic fallback to the 1408-available baseline. Missing extension
+    files raise a helpful error, rather than accidentally changing the dataset.
     """
 
     def __init__(
@@ -108,59 +115,129 @@ class Sentinel1PatchLoader:
                           else _resolve_default_root()).expanduser().resolve()
         self.data_dir = (Path(data_dir) if data_dir is not None
                          else self.repo_root / "data/processed/c4/satellite/sentinel1").expanduser().resolve()
-        self.index_path = self.data_dir / INDEX_FILENAME
-        self.manifest_path = self.data_dir / MANIFEST_FILENAME
-        for path in (self.index_path, self.manifest_path):
+        self.extension_dir = self.data_dir / EXTENSION_DIRNAME
+        self.index_path = self.extension_dir / INDEX_FILENAME
+        self.manifest_path = self.extension_dir / MANIFEST_FILENAME
+        self.extension_qa_path = self.extension_dir / QA_FILENAME
+        self.original_index_path = self.data_dir / BASE_INDEX_FILENAME
+        self.original_manifest_path = self.data_dir / BASE_MANIFEST_FILENAME
+        needed = (self.index_path, self.manifest_path, self.extension_qa_path,
+                  self.original_index_path, self.original_manifest_path)
+        for path in needed:
             if not path.is_file():
                 raise FileNotFoundError(
-                    f"Missing Notebook 02 output: {path}. Keep generated data under "
-                    "data/processed/c4/satellite/sentinel1; do not rerun Earth Engine."
+                    f"Missing Sentinel-1 artifact: {path}. Run Notebook 02 G7 or "
+                    "copy its full glencourse_mosaic_extension folder alongside the "
+                    "unchanged original outputs. Do not rerun study-wide extraction."
                 )
-        self.manifest = json.loads(self.manifest_path.read_text(encoding="utf-8"))
+        self.original_manifest = json.loads(self.original_manifest_path.read_text(encoding="utf-8"))
+        self.extension_manifest = json.loads(self.manifest_path.read_text(encoding="utf-8"))
+        # Effective contract exposed to downstream code. Original on-disk manifest
+        # remains an immutable 1408/261 baseline; extension adds 21/3.
+        self.manifest = dict(self.original_manifest)
+        self.manifest["n_available_station_days"] = EXPECTED_AVAILABLE
+        self.manifest["n_unique_accepted_patches"] = EXPECTED_PATCHES
+        self.manifest["glencourse_extension_version"] = self.extension_manifest.get("version")
         self.verify_patch_hashes = bool(verify_patch_hashes)
-        self._validate_manifest(verify_provenance)
+        self._validate_manifest(bool(verify_provenance))
         self._frame = pd.read_csv(self.index_path, encoding="utf-8-sig", low_memory=False)
+        self._original_frame = pd.read_csv(self.original_index_path, encoding="utf-8-sig", low_memory=False)
         self._validate_index()
         self._by_id = self._frame.set_index("record_id", drop=False)
 
-        # Cache only a few UNIQUE, already-verified scene patches (not full study tensors).
         @lru_cache(maxsize=8)
         def read_cached(relative_path: str, expected_hash: str) -> tuple[np.ndarray, np.ndarray]:
             return self._read_patch(relative_path, expected_hash)
-
         self._read_cached = read_cached
 
     def _validate_manifest(self, verify_provenance: bool) -> None:
-        m = self.manifest
-        _require(m.get("source_version") == EXPECTED_SOURCE_VERSION,
-                 "Unexpected Sentinel-1 source version; do not mix extraction configurations.")
-        cfg = m.get("source_config", {})
-        _require(cfg.get("source") == "COPERNICUS/S1_GRD", "Incorrect SAR source collection.")
-        _require(cfg.get("bands") == ["VV", "VH"] and cfg.get("mode") == "IW",
-                 "Expected IW Sentinel-1 VV/VH bands in this order.")
-        _require(cfg.get("grid_size") == IMAGE_SHAPE[0] and cfg.get("grid_crs") == "EPSG:32644",
-                 "Unexpected SAR patch grid.")
-        _require(float(cfg.get("pixel_metres", -1)) == 50.0 and
+        base, ext = self.original_manifest, self.extension_manifest
+        _require(base.get("source_version") == EXPECTED_SOURCE_VERSION,
+                 "Original Sentinel-1 source version changed.")
+        cfg = base.get("source_config", {})
+        _require(cfg.get("source") == "COPERNICUS/S1_GRD" and
+                 cfg.get("bands") == ["VV", "VH"] and cfg.get("mode") == "IW",
+                 "Unexpected original Sentinel-1 source/bands/mode.")
+        _require(cfg.get("grid_size") == IMAGE_SHAPE[0] and cfg.get("grid_crs") == "EPSG:32644" and
+                 float(cfg.get("pixel_metres", -1)) == 50.0 and
                  float(cfg.get("max_age_days", -1)) == 18.0 and
                  float(cfg.get("min_valid_fraction", -1)) == 0.97,
-                 "Unexpected SAR 50m/18-day/97% selection policy.")
-        _require(m.get("n_labelled_station_days") == EXPECTED_SAMPLES and
-                 m.get("n_labelled_gauges") == EXPECTED_STATIONS,
-                 "Unexpected Sentinel-1 record or station count in manifest.")
-        _require(m.get("n_available_station_days") == 1408 and
-                 m.get("n_unique_accepted_patches") == 261,
-                 "Manifest differs from the audited Notebook 02 export (1408/261).")
+                 "Original SAR 50m/18-day/97% selection policy changed.")
+        _require(base.get("n_labelled_station_days") == EXPECTED_SAMPLES and
+                 base.get("n_labelled_gauges") == EXPECTED_STATIONS and
+                 base.get("n_available_station_days") == EXPECTED_BASE_AVAILABLE and
+                 base.get("n_unique_accepted_patches") == EXPECTED_BASE_PATCHES,
+                 "Original Notebook 02 1408/261 manifest is not the audited baseline.")
+        _require(ext.get("version") == GLEN_VERSION and
+                 ext.get("parent_source_version") == EXPECTED_SOURCE_VERSION and
+                 ext.get("source_asset") == "COPERNICUS/S1_GRD" and
+                 ext.get("source_config_sha256") == base.get("source_config_sha256"),
+                 "Glencourse extension is incompatible with original source configuration.")
+        _require(ext.get("station_id") == "glencourse" and
+                 ext.get("n_original_available") == EXPECTED_BASE_AVAILABLE and
+                 ext.get("n_missing_before") == 21 and
+                 ext.get("n_recovered") == 21 and
+                 ext.get("n_available_after") == EXPECTED_AVAILABLE and
+                 ext.get("n_missing_after") == 0 and
+                 ext.get("n_mosaic_patches_accepted") == EXPECTED_MOSAIC_PATCHES and
+                 ext.get("original_1408_rows_unchanged") is True,
+                 "Glencourse extension manifest does not describe complete 21-row recovery.")
+        _require(ext.get("original_1429_row_mapping_unchanged_path") ==
+                 "data/processed/c4/satellite/sentinel1/" + BASE_INDEX_FILENAME,
+                 "Glencourse manifest references a different original mapping.")
+        mosaics = ext.get("mosaics", [])
+        _require(isinstance(mosaics, list) and len(mosaics) == EXPECTED_MOSAIC_PATCHES,
+                 "Expected exactly three provenance-described Glencourse mosaics.")
+        self._mosaics = {m.get("mosaic_id"): m for m in mosaics}
+        _require(len(self._mosaics) == EXPECTED_MOSAIC_PATCHES and
+                 all(isinstance(k, str) and k.startswith("GLEN_S1_") for k in self._mosaics),
+                 "Invalid or duplicated Glencourse mosaic IDs.")
+        _require(set(ext.get("accepted_mosaic_ids", [])) == set(self._mosaics),
+                 "Accepted mosaic IDs disagree with provenance mosaic list.")
+        for mid, m in self._mosaics.items():
+            scenes = m.get("scene_ids", [])
+            times = pd.to_datetime(m.get("source_utc", []), utc=True, errors="coerce")
+            _require(len(scenes) == 2 and len(set(scenes)) == 2 and
+                     len(times) == 2 and times.notna().all(),
+                     f"{mid}: expected two distinct source slices with timestamps.")
+            _require(m.get("mosaic_quality_status") == "ACCEPTED" and
+                     float(m.get("valid_union_fraction", -1)) > 0.97 and
+                     float(m.get("valid_union_fraction", -1)) <= 1.0 and
+                     isinstance(m.get("patch_sha256"), str) and
+                     len(m["patch_sha256"]) == 64,
+                     f"{mid}: failed mosaic quality/hash metadata.")
+            _require(m.get("orbit_pass") == "DESCENDING" and
+                     m.get("platform") == "A" and
+                     0 < float(m.get("time_gap_seconds", -1)) <= 90,
+                     f"{mid}: unexpected platform, pass or slice gap.")
+            _require(times[0] < times[1] and
+                     times[0] == pd.to_datetime(m.get("acq_earliest_utc"), utc=True) and
+                     times[1] == pd.to_datetime(m.get("acq_latest_utc"), utc=True) and
+                     abs((times[1] - times[0]).total_seconds() - float(m["time_gap_seconds"])) < 1e-5,
+                     f"{mid}: source-slice timestamps are inconsistent.")
+
         if verify_provenance:
-            recorded = m.get("output_sha256", {}).get(INDEX_FILENAME)
-            _require(isinstance(recorded, str) and recorded == _digest(self.index_path),
-                     "Sentinel-1 sample index SHA256 differs from Notebook 02 manifest.")
-            expected = m.get("notebook01_target_free_index_sha256")
-            _require(isinstance(expected, str) and len(expected) == 64,
-                     "Notebook 01 source-index SHA256 missing from SAR manifest.")
-            original = self.repo_root / "data/processed/c4/manifests/c4_sample_index_1429.csv"
-            if original.is_file():
-                _require(_digest(original) == expected,
-                         "Notebook 01 sample index changed after SAR extraction.")
+            for fn in (BASE_INDEX_FILENAME, *BASE_OTHER_FILES):
+                path = self.data_dir / fn
+                if not path.is_file():
+                    raise FileNotFoundError(f"Original Notebook 02 provenance artifact missing: {path}")
+                base_hash = base.get("output_sha256", {}).get(fn)
+                ext_hash = ext.get("original_input_sha256", {}).get(fn)
+                _require(base_hash == ext_hash == _digest(path),
+                         f"Original {fn} hash differs from both manifests.")
+            _require(ext.get("original_input_sha256", {}).get(BASE_MANIFEST_FILENAME)
+                     == _digest(self.original_manifest_path),
+                     "Original manifest changed since the Glencourse extension was created.")
+            for fn, path in ((INDEX_FILENAME, self.index_path), (QA_FILENAME, self.extension_qa_path)):
+                _require(ext.get("output_sha256", {}).get(fn) == _digest(path),
+                         f"Glencourse {fn} SHA256 differs from extension manifest.")
+            target_hash = base.get("notebook01_target_free_index_sha256")
+            _require(isinstance(target_hash, str) and len(target_hash) == 64,
+                     "Missing Notebook 01 target-free source-index SHA256.")
+            source_index = self.repo_root / "data/processed/c4/manifests/c4_sample_index_1429.csv"
+            if source_index.is_file():
+                _require(_digest(source_index) == target_hash,
+                         "Notebook 01 target-free sample index changed.")
 
     def _validate_index(self) -> None:
         df = self._frame
@@ -238,6 +315,77 @@ class Sentinel1PatchLoader:
         _require(not set(df.columns).intersection(
             {"target_delta_stage_m", "target_stage_next_day_m", "stage_at_issue_m"}),
             "Target data unexpectedly appear inside the Sentinel-1 index.")
+        self._validate_overlay()
+
+    def _validate_overlay(self) -> None:
+        """Prove that exactly the original 21 missing Glencourse rows were filled."""
+        before, after = self._original_frame, self._frame
+        _require(list(before.columns) == list(after.columns) == list(REQUIRED_COLUMNS),
+                 "Original and Glencourse mapping schemas differ.")
+        _require(len(before) == len(after) == EXPECTED_SAMPLES and
+                 before["record_id"].tolist() == after["record_id"].tolist(),
+                 "Original and recovered record identities/order differ.")
+        _require(before["sar_available"].dtype == bool and
+                 int(before["sar_available"].sum()) == EXPECTED_BASE_AVAILABLE,
+                 "Original 1408-available index is missing or has changed.")
+        previously_missing = ~before["sar_available"]
+        _require(int(previously_missing.sum()) == 21 and
+                 set(before.loc[previously_missing, "station_id"]) == {"glencourse"},
+                 "Baseline does not contain exactly the 21 Glencourse gaps.")
+        # Column-by-column EXPLICIT exact comparison; pandas NaNs compare equal here.
+        try:
+            pd.testing.assert_frame_equal(after.loc[~previously_missing],
+                                          before.loc[~previously_missing],
+                                          check_dtype=True, check_exact=True)
+        except AssertionError as exc:
+            raise Sentinel1DataError(
+                "One or more of the original 1408 available station-days changed."
+            ) from exc
+        _require(after.loc[previously_missing, "sar_available"].eq(True).all(),
+                 "Not all 21 Glencourse dates were recovered.")
+        # Only those 21 rows may differ (the other 1408 were compared above).
+        recovered = after.loc[previously_missing]
+        _require(recovered["sar_scene_id"].isin(self._mosaics).all(),
+                 "Recovered Glencourse row references a non-approved mosaic.")
+        _require(recovered["sar_scene_id"].value_counts().sort_values().tolist() == [6, 6, 9],
+                 "Unexpected 9+6+6 Glencourse scene-to-date assignment.")
+        _require(len(after.loc[after.sar_available, ["station_id", "sar_scene_id"]].drop_duplicates())
+                 == EXPECTED_PATCHES,
+                 "Expected 261 original plus 3 new unique station-scene patches.")
+        allowed_prefix = (
+            "data/processed/c4/satellite/sentinel1/cache/patches/glencourse/mosaics/"
+        )
+        for mid, group in recovered.groupby("sar_scene_id", sort=False):
+            m = self._mosaics[mid]
+            _require(group["station_id"].eq("glencourse").all() and
+                     group["patch_relpath"].str.startswith(allowed_prefix).all(),
+                     f"{mid}: recovered patch is not in the dedicated mosaic cache.")
+            _require(group["patch_sha256"].eq(m["patch_sha256"]).all() and
+                     group["sar_acquisition_utc"].eq(m["acq_earliest_utc"]).all() and
+                     group["sar_orbit_pass"].eq(m["orbit_pass"]).all() and
+                     group["sar_relative_orbit"].eq(float(m["relative_orbit"])).all() and
+                     np.allclose(group["sar_valid_pixel_fraction"].to_numpy(dtype=float),
+                                 float(m["valid_union_fraction"]), rtol=0, atol=1e-8),
+                     f"{mid}: recovered rows conflict with provenance.")
+            _require(group["patch_relpath"].nunique() == 1 and
+                     group["patch_relpath"].iloc[0].endswith(".npz"),
+                     f"{mid}: inconsistent cached NPZ path.")
+            acquired_last = pd.to_datetime(m["acq_latest_utc"], utc=True)
+            cutoff = pd.to_datetime(group["forecast_date"], utc=True) + pd.Timedelta(hours=3, minutes=30)
+            _require((acquired_last < cutoff).all(),
+                     f"{mid}: a source slice occurs after the forecast origin.")
+        qa = pd.read_csv(self.extension_qa_path, low_memory=False)
+        _require(len(qa) == 21 and qa["record_id"].is_unique and
+                 set(qa["record_id"]) == set(recovered["record_id"]) and
+                 qa["recovered"].eq(True).all() and
+                 set(qa["mosaic_quality_status"]) == {"ACCEPTED"},
+                 "Glencourse QA CSV disagrees with the 21 recovered rows.")
+        qa_aligned = qa.set_index("record_id").loc[recovered["record_id"]]
+        _require((qa_aligned["proposed_mosaic_id"].to_numpy()
+                  == recovered["sar_scene_id"].to_numpy()).all() and
+                 np.allclose(qa_aligned["conservative_age_hours"].to_numpy(dtype=float),
+                             recovered["sar_age_hours"].to_numpy(dtype=float), rtol=0, atol=1e-6),
+                 "Glencourse QA mosaic IDs or ages do not match the recovered index.")
 
     def _resolve_patch_path(self, relative_path: str) -> Path:
         value = str(relative_path).replace("\\", "/")
@@ -269,6 +417,9 @@ class Sentinel1PatchLoader:
                  f"Incorrect cached SAR array shapes: {path}")
         _require(valid.mean() >= float(self.manifest["source_config"]["min_valid_fraction"]),
                  f"Accepted cached patch now fails pixel-validity threshold: {path}")
+        if "/glencourse/mosaics/" in relative_path.replace("\\", "/"):
+            _require(valid.mean() > 0.97,
+                     f"Glencourse mosaic does not pass STRICT >97% valid pixels: {path}")
         _require(np.isfinite(image[valid]).all(),
                  f"Valid SAR pixels must have finite VV/VH dB: {path}")
         _require(np.isnan(image[~valid]).all(),
@@ -278,6 +429,36 @@ class Sentinel1PatchLoader:
         image.setflags(write=False)
         valid.setflags(write=False)
         return image, valid
+
+    def verify_all_patches(self) -> dict:
+        """Offline full cache QA: read/hash-check all 264 unique NPZ patches.
+
+        Does not contact Earth Engine. Requires the original 261 and three new
+        mosaic NPZ files on disk. Reads files sequentially; bounded RAM usage.
+        Returns a summary only after every file passes.
+        """
+        _require(self.verify_patch_hashes,
+                 "Full patch verification requires verify_patch_hashes=True.")
+        unique = self._frame.loc[self._frame["sar_available"],
+                                 ["patch_relpath", "patch_sha256",
+                                  "sar_valid_pixel_fraction"]].drop_duplicates()
+        _require(len(unique) == EXPECTED_PATCHES, "Expected exactly 264 distinct patch files.")
+        counts = {"original": 0, "glencourse_mosaics": 0}
+        for row in unique.itertuples(index=False):
+            _, valid = self._read_patch(str(row.patch_relpath), str(row.patch_sha256))
+            _require(abs(float(valid.mean()) - float(row.sar_valid_pixel_fraction)) <= 1e-6,
+                     f"Cached pixel mask differs from SAR mapping: {row.patch_relpath}")
+            if "/glencourse/mosaics/" in str(row.patch_relpath).replace("\\", "/"):
+                _require(float(valid.mean()) > 0.97,
+                         f"Glencourse mosaic now fails STRICT >97% coverage: {row.patch_relpath}")
+                counts["glencourse_mosaics"] += 1
+            else:
+                counts["original"] += 1
+        _require(counts == {"original": EXPECTED_BASE_PATCHES,
+                            "glencourse_mosaics": EXPECTED_MOSAIC_PATCHES},
+                 "Patch validation counts disagree with audited metadata.")
+        return {"station_days": len(self._frame), "available": int(self._frame.sar_available.sum()),
+                "unique_patches_verified": len(unique), **counts}
 
     @property
     def station_count(self) -> int:
@@ -329,6 +510,12 @@ class Sentinel1PatchLoader:
             "sar_scene_id": str(r["sar_scene_id"]) if available else None,
             "sar_acquisition_utc": str(r["sar_acquisition_utc"]) if available else None,
             "sar_status": str(r["sar_status"]),
+            "sar_valid_pixel_fraction": (np.float32(r["sar_valid_pixel_fraction"])
+                                         if available else np.float32(np.nan)),
+            "sar_orbit_pass": str(r["sar_orbit_pass"]) if available else None,
+            "sar_relative_orbit": (int(r["sar_relative_orbit"]) if available else None),
+            "patch_relpath": str(r["patch_relpath"]) if available else None,
+            "patch_sha256": str(r["patch_sha256"]) if available else None,
         }
 
     def _checked_records(self, records: pd.DataFrame) -> pd.DataFrame:
@@ -369,6 +556,10 @@ class Sentinel1PatchLoader:
             "sar_age_hours": np.array([s["sar_age_hours"] for s in samples], dtype=np.float32).reshape(-1, 1),
             "sar_age_logscaled": np.array([s["sar_age_logscaled"] for s in samples], dtype=np.float32).reshape(-1, 1),
             "sar_available": np.array([s["sar_available"] for s in samples], dtype=np.float32).reshape(-1, 1),
+            "sar_validity_flag": np.array([s["sar_validity_flag"] for s in samples], dtype=np.float32).reshape(-1, 1),
+            "sar_valid_pixel_fraction": np.array([s["sar_valid_pixel_fraction"] for s in samples], dtype=np.float32).reshape(-1, 1),
+            "sar_scene_id": [s["sar_scene_id"] for s in samples],
+            "sar_acquisition_utc": [s["sar_acquisition_utc"] for s in samples],
         }
 
     def for_station_days(self, records: pd.DataFrame, *, max_batch_size: int = 32) -> dict:
@@ -385,4 +576,5 @@ class Sentinel1PatchLoader:
             yield self.get_batch(records.iloc[start:start + batch_size], max_batch_size=batch_size)
 
 
-__all__ = ["Sentinel1PatchLoader", "Sentinel1DataError", "INDEX_FILENAME"]
+__all__ = ["Sentinel1PatchLoader", "Sentinel1DataError", "INDEX_FILENAME",
+           "MANIFEST_FILENAME", "BASE_INDEX_FILENAME", "BASE_MANIFEST_FILENAME"]
