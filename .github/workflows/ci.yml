@@ -1,0 +1,39 @@
+name: Source checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python-syntax-and-sensitive-paths:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check C1 Python source syntax
+        run: |
+          if [ -d c1_satellite/backend ]; then
+            python -m compileall -q c1_satellite/backend
+          else
+            echo "No C1 backend source on this branch yet"
+          fi
+      - name: Reject accidentally tracked secrets and local artifacts
+        shell: bash
+        run: |
+          python - <<'PYCODE'
+          import subprocess
+          paths = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
+          blocked = []
+          for p in filter(None, paths):
+              path = p.lower().replace('\\', '/')
+              if path == 'secrets.env' or path.endswith('/secrets.env') or path == '.env' or path.endswith('/.env'):
+                  blocked.append(p)
+              if any(path.startswith('c1_satellite/backend/' + d + '/') and not path.endswith('/.gitkeep')
+                     for d in ('local_data', 'outputs', 'saved_models')):
+                  blocked.append(p)
+          if blocked:
+              raise SystemExit('Blocked tracked files: ' + ', '.join(blocked))
+          PYCODE
