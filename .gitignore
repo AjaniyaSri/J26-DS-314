@@ -1,57 +1,61 @@
-# Large research data
-data/raw/
-data/processed/
-data/patches/
-
-# Geospatial files
-*.tif
-*.tiff
-*.vrt
-*.nc
-*.h5
-
-# ML artifacts
-*.pt
-*.pth
-*.ckpt
-*.keras
-*.onnx
-
-# Experiment outputs
-runs/
-outputs/
-checkpoints/
-embeddings/
-
-# Local environments
+# Python environments and caches
 .venv/
+venv/
 env/
 rp_env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
 
-# Temporary
-tmp/
-cache/
-
-secrets.env
-
-# Intermediate watershed processing files
-/results/catchments/
-
-# Shared binary raster masks stay outside Git
-/shared/spatial/catchments/**/*.tif
-/shared/spatial/catchments/**/*.tiff
-
-# Private third-party hydrography reference data
-/private_data/
-rivers_part*.json
-rivers.json
-
-# Local maps that embed third-party river coordinates
-/results/catchments/
-*_PRIVATE_RIVER_QA.html
-
-# Local secrets
+# Private credentials
 .env
 .env.*
 !.env.example
-*_secrets.env
+secrets.env
+**/secrets.env
+*secrets*.json
+*.pem
+*.key
+
+# Local scientific and model data
+*.zip
+*.pdf
+/data/raw/
+/data/processed/
+/data/patches/
+/private_data/
+/c1_satellite/backend/local_data/*
+!/c1_satellite/backend/local_data/.gitkeep
+/c1_satellite/backend/outputs/*
+!/c1_satellite/backend/outputs/.gitkeep
+/c1_satellite/backend/saved_models/*
+!/c1_satellite/backend/saved_models/.gitkeep
+*.tif
+*.tiff
+*.nc
+*.h5
+*.hdf5
+*.vrt
+*.joblib
+*.pkl
+*.pickle
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.keras
+/runs/
+/checkpoints/
+/embeddings/
+/results/catchments/
+*_PRIVATE_RIVER_QA.html
+rivers_part*.json
+rivers.json

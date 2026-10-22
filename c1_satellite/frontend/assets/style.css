@@ -1,0 +1,41 @@
+:root {
+  --bg-dark: #0A2F4B;
+  --bg-panel: #003D5B;
+  --bg-panel-elevated: rgba(0, 61, 91, 0.6);
+  --bg-input: #02263F;
+  --primary-accent: #00FFC8; /* teal‑green */
+  --primary-glow: rgba(0, 255, 200, 0.35);
+  --cyan-highlight: #00FFC8;
+  --cyan-glow: rgba(0, 255, 200, 0.25);
+  --text-main: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --border-subtle: rgba(0, 255, 200, 0.12);
+  --border-focus: rgba(0, 255, 200, 0.45);
+  --alert-normal: #10B981;
+  --alert-warning: #F59E0B;
+  --alert-minor: #F97316;
+  --alert-major: #EF4444;
+  --card-radius: 12px;
+  --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Glass‑morphism panel */
+.glass-panel {
+  background: rgba(10, 47, 75, 0.45);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 255, 200, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 255, 200, 0.2);
+}
+
+/* Button gradient */
+.btn-predict {
+  background: linear-gradient(135deg, #00FFC8, #0FA3A3);
+}
+
+/* Nav tab active */
+.nav-tab-btn.active {
+  background: var(--primary-accent);
+  color: #FFFFFF;
+  box-shadow: 0 0 12px var(--primary-glow);
+}
