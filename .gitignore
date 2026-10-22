@@ -26,6 +26,8 @@ secrets.env
 *.key
 
 # Local scientific and model data
+*.zip
+*.pdf
 /data/raw/
 /data/processed/
 /data/patches/
